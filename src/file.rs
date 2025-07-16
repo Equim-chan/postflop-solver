@@ -42,7 +42,7 @@ fn encode_into_std_write<E: Encode, W: Write>(
     err_msg: &str,
 ) -> Result<usize, String> {
     bincode::encode_into_std_write(val, writer, bincode::config::standard())
-        .map_err(|e| format!("{}: {}", err_msg, e))
+        .map_err(|e| format!("{err_msg}: {e}"))
 }
 
 /// Saves data into a standard writer.
@@ -92,25 +92,25 @@ pub fn save_data_into_std_write<T: FileData, W: Write>(
         encode_into_std_write(data, writer, "Failed to write data")?;
         writer
             .flush()
-            .map_err(|e| format!("Failed to flush writer: {}", e))?;
+            .map_err(|e| format!("Failed to flush writer: {e}"))?;
     }
 
     #[cfg(feature = "zstd")]
     if let Some(compression_level) = compression_level {
         let mut zstd_encoder = zstd::stream::Encoder::new(writer, compression_level)
-            .map_err(|e| format!("Failed to create zstd encoder: {}", e))?;
+            .map_err(|e| format!("Failed to create zstd encoder: {e}"))?;
 
         #[cfg(feature = "rayon")]
         zstd_encoder
             .multithread(rayon::current_num_threads() as u32)
-            .map_err(|e| format!("Failed to enable multithreaded zstd encoder: {}", e))?;
+            .map_err(|e| format!("Failed to enable multithreaded zstd encoder: {e}"))?;
 
         encode_into_std_write(data, &mut zstd_encoder, "Failed to write data")?;
         zstd_encoder
             .finish()
-            .map_err(|e| format!("Failed to finish zstd encoder: {}", e))?
+            .map_err(|e| format!("Failed to finish zstd encoder: {e}"))?
             .flush()
-            .map_err(|e| format!("Failed to flush writer: {}", e))?;
+            .map_err(|e| format!("Failed to flush writer: {e}"))?;
     }
 
     Ok(())
@@ -134,14 +134,14 @@ pub fn save_data_to_file<T: FileData, P: AsRef<Path>>(
     path: P,
     compression_level: Option<i32>,
 ) -> Result<(), String> {
-    let file = File::create(path).map_err(|e| format!("Failed to create file: {}", e))?;
+    let file = File::create(path).map_err(|e| format!("Failed to create file: {e}"))?;
     let mut writer = BufWriter::new(file);
     save_data_into_std_write(data, memo, &mut writer, compression_level)
 }
 
 fn decode_from_std_read<D: Decode, R: Read>(reader: &mut R, err_msg: &str) -> Result<D, String> {
     bincode::decode_from_std_read(reader, bincode::config::standard())
-        .map_err(|e| format!("{}: {}", err_msg, e))
+        .map_err(|e| format!("{err_msg}: {e}"))
 }
 
 /// Loads data from a standard reader.
@@ -205,7 +205,7 @@ pub fn load_data_from_std_read<T: FileData, R: Read>(
         decode_from_std_read(reader, "Failed to read data")?
     } else {
         let mut zstd_decoder = zstd::stream::Decoder::new(reader)
-            .map_err(|e| format!("Failed to create zstd decoder: {}", e))?;
+            .map_err(|e| format!("Failed to create zstd decoder: {e}"))?;
         decode_from_std_read(&mut zstd_decoder, "Failed to read data")?
     };
 
@@ -230,7 +230,7 @@ pub fn load_data_from_file<T: FileData, P: AsRef<Path>>(
     path: P,
     max_memory_usage: Option<u64>,
 ) -> Result<(T, String), String> {
-    let file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
     let mut reader = BufReader::new(file);
     load_data_from_std_read(&mut reader, max_memory_usage)
 }
