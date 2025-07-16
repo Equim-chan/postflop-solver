@@ -89,7 +89,9 @@ impl Game for LeducGame {
             let payoff_normalized = amount_normalized * sign;
             for (my_card, result_item) in result.iter_mut().enumerate().take(NUM_PRIVATE_HANDS) {
                 if my_card != node.board {
-                    for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS) {
+                    for (opp_card, &cfreach_item) in
+                        cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS)
+                    {
                         if my_card != opp_card && opp_card != node.board {
                             *result_item += payoff_normalized * cfreach_item;
                         }
@@ -99,7 +101,9 @@ impl Game for LeducGame {
         } else {
             for (my_card, result_item) in result.iter_mut().enumerate().take(NUM_PRIVATE_HANDS) {
                 if my_card != node.board {
-                    for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS) {
+                    for (opp_card, &cfreach_item) in
+                        cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS)
+                    {
                         if my_card != opp_card && opp_card != node.board {
                             let sign = match () {
                                 _ if my_card / 2 == node.board / 2 => 1.0,

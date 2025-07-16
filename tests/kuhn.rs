@@ -76,7 +76,8 @@ impl Game for KuhnGame {
             let sign = [1.0, -1.0][(player == folded_player) as usize];
             let payoff_normalized = amount_normalized * sign;
             for (my_card, result_item) in result.iter_mut().enumerate().take(NUM_PRIVATE_HANDS) {
-                for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS) {
+                for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS)
+                {
                     if my_card != opp_card {
                         *result_item += payoff_normalized * cfreach_item;
                     }
@@ -84,7 +85,8 @@ impl Game for KuhnGame {
             }
         } else {
             for (my_card, result_item) in result.iter_mut().enumerate().take(NUM_PRIVATE_HANDS) {
-                for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS) {
+                for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS)
+                {
                     if my_card != opp_card {
                         let sign = [1.0, -1.0][(my_card < opp_card) as usize];
                         let payoff_normalized = amount_normalized * sign;

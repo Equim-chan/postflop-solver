@@ -716,7 +716,11 @@ impl BunchingData {
                 let chunk_end_index = usize::min(chunk_start_index + 100, end_index);
                 let mut src_mask = index_to_mask(chunk_start_index, K);
 
-                for src_table_entry in src_table.iter().take(chunk_end_index).skip(chunk_start_index) {
+                for src_table_entry in src_table
+                    .iter()
+                    .take(chunk_end_index)
+                    .skip(chunk_start_index)
+                {
                     let mut src_mask_copy = src_mask;
                     src_mask = next_combination(src_mask);
 
