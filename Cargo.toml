@@ -17,5 +17,6 @@ zstd = { version = "0.12", optional = true, default-features = false }
 
 [features]
 default = ["bincode", "rayon"]
+bincode = ["dep:bincode", "dep:bincode_derive"]
 custom-alloc = []
 rayon = ["dep:rayon", "zstd?/zstdmt"]
