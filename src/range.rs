@@ -1,6 +1,6 @@
 use crate::card::*;
 use regex::Regex;
-use std::fmt::Write;
+use std::fmt::{self, Write};
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -145,7 +145,7 @@ fn char_to_rank(c: char) -> Result<u8, String> {
     }
 }
 
-/// Attempts to conver a suit character to a suit index.
+/// Attempts to convert a suit character to a suit index.
 ///
 /// `'c'` => `0`, `'d'` => `1`, `'h'` => `2`, `'s'` => `3`.
 #[inline]
@@ -990,14 +990,14 @@ impl FromStr for Range {
     }
 }
 
-impl ToString for Range {
+impl fmt::Display for Range {
     #[inline]
-    fn to_string(&self) -> String {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut result = Vec::new();
         self.pairs_strings(&mut result);
         self.nonpairs_strings(&mut result);
         self.suit_specified_strings(&mut result);
-        result.join(",")
+        write!(f, "{}", result.join(","))
     }
 }
 

@@ -236,7 +236,7 @@ fn solve_recursive<T: Game>(
             );
         });
 
-        // compute the strategy by regret-maching algorithm
+        // compute the strategy by regret-matching algorithm
         let mut strategy = if game.is_compression_enabled() {
             regret_matching_compressed(node.regrets_compressed(), num_actions)
         } else {

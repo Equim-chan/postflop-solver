@@ -112,7 +112,7 @@ const COMB_TABLE: [[usize; 49]; 8] = [
 ///
 /// The additional memory usage required for the computation is as follows:
 ///
-/// | #(fold players) | Aditional memory usage |
+/// | #(fold players) | Additional memory usage |
 /// |:---:|:---:|
 /// | 1 | 18.4KB |
 /// | 2 | 1.77MB |
@@ -145,10 +145,10 @@ pub struct BunchingData {
 #[inline]
 fn mask_to_index(mut mask: u64, k: usize) -> usize {
     let mut index = 0;
-    for i in 0..k {
+    for comb_row in COMB_TABLE.iter().take(k) {
         assert!(mask != 0);
         let tz = mask.trailing_zeros();
-        index += COMB_TABLE[i][tz as usize];
+        index += comb_row[tz as usize];
         mask &= mask - 1;
     }
     index
@@ -175,8 +175,8 @@ fn next_combination(mask: u64) -> u64 {
 #[inline]
 fn compress_mask(mut mask: u64, flop: [Card; 3]) -> u64 {
     assert!(flop[0] < flop[1] && flop[1] < flop[2]);
-    for i in 0..3 {
-        let m = (1 << (flop[i] as usize - i)) - 1;
+    for (i, &card) in flop.iter().enumerate() {
+        let m = (1 << (card as usize - i)) - 1;
         mask = (mask & m) | ((mask >> 1) & !m);
     }
     mask
@@ -716,36 +716,36 @@ impl BunchingData {
                 let chunk_end_index = usize::min(chunk_start_index + 100, end_index);
                 let mut src_mask = index_to_mask(chunk_start_index, K);
 
-                for src_index in chunk_start_index..chunk_end_index {
+                for src_table_entry in src_table.iter().take(chunk_end_index).skip(chunk_start_index) {
                     let mut src_mask_copy = src_mask;
                     src_mask = next_combination(src_mask);
 
-                    let freq = src_table[src_index].load();
+                    let freq = src_table_entry.load();
                     if freq == 0.0 {
                         continue;
                     }
 
                     let mut src_mask_bit = [0; K];
-                    for i in 0..K {
+                    for bit in src_mask_bit.iter_mut().take(K) {
                         let lsb = src_mask_copy & src_mask_copy.wrapping_neg();
                         src_mask_copy ^= lsb;
-                        src_mask_bit[i] = lsb;
+                        *bit = lsb;
                     }
 
-                    for i in 0..(1 << K) - 1 {
-                        if num_ones[i] > 6 {
+                    for (i, &ones_count) in num_ones.iter().enumerate().take((1 << K) - 1) {
+                        if ones_count > 6 {
                             continue;
                         }
 
                         let mut dst_mask = 0;
-                        for j in 0..K {
+                        for (j, &bit) in src_mask_bit.iter().enumerate().take(K) {
                             if i & (1 << j) != 0 {
-                                dst_mask |= src_mask_bit[j];
+                                dst_mask |= bit;
                             }
                         }
 
-                        let dst_index = mask_to_index(dst_mask, num_ones[i] as usize);
-                        self.sum[num_ones[i] as usize][dst_index].add(freq);
+                        let dst_index = mask_to_index(dst_mask, ones_count as usize);
+                        self.sum[ones_count as usize][dst_index].add(freq);
                     }
                 }
             });
@@ -773,24 +773,24 @@ impl BunchingData {
                 let dst_end_index = usize::min(dst_start_index + 100, end_index);
                 let mut mask = index_to_mask(dst_start_index, N);
 
-                for dst_index in dst_start_index..dst_end_index {
+                for dst_table_entry in dst_table.iter().take(dst_end_index).skip(dst_start_index) {
                     let mut mask_copy = mask;
                     mask = next_combination(mask);
 
                     let mut mask_bit = [0; N];
-                    for i in 0..N {
+                    for bit in mask_bit.iter_mut().take(N) {
                         let lsb = mask_copy & mask_copy.wrapping_neg();
                         mask_copy ^= lsb;
-                        mask_bit[i] = lsb;
+                        *bit = lsb;
                     }
 
                     let mut result = 0.0;
 
                     for &(i, k) in &indices {
                         let mut src_mask = 0;
-                        for j in 0..N {
+                        for (j, &bit) in mask_bit.iter().enumerate().take(N) {
                             if i & (1 << j) != 0 {
-                                src_mask |= mask_bit[j];
+                                src_mask |= bit;
                             }
                         }
 
@@ -802,7 +802,7 @@ impl BunchingData {
                         }
                     }
 
-                    dst_table[dst_index].store(f32::max(result as f32, 0.0));
+                    dst_table_entry.store(f32::max(result as f32, 0.0));
                 }
             });
     }
@@ -820,8 +820,8 @@ mod tests {
         ];
 
         let mut mask = 0b001111;
-        for i in 0..15 {
-            assert_eq!(mask, seq[i]);
+        for &expected in &seq {
+            assert_eq!(mask, expected);
             mask = next_combination(mask);
         }
     }

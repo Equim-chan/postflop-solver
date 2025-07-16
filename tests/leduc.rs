@@ -87,19 +87,19 @@ impl Game for LeducGame {
             let folded_player = node.player & PLAYER_MASK;
             let sign = [1.0, -1.0][(player == folded_player) as usize];
             let payoff_normalized = amount_normalized * sign;
-            for my_card in 0..NUM_PRIVATE_HANDS {
+            for (my_card, result_item) in result.iter_mut().enumerate().take(NUM_PRIVATE_HANDS) {
                 if my_card != node.board {
-                    for opp_card in 0..NUM_PRIVATE_HANDS {
+                    for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS) {
                         if my_card != opp_card && opp_card != node.board {
-                            result[my_card] += payoff_normalized * cfreach[opp_card];
+                            *result_item += payoff_normalized * cfreach_item;
                         }
                     }
                 }
             }
         } else {
-            for my_card in 0..NUM_PRIVATE_HANDS {
+            for (my_card, result_item) in result.iter_mut().enumerate().take(NUM_PRIVATE_HANDS) {
                 if my_card != node.board {
-                    for opp_card in 0..NUM_PRIVATE_HANDS {
+                    for (opp_card, &cfreach_item) in cfreach.iter().enumerate().take(NUM_PRIVATE_HANDS) {
                         if my_card != opp_card && opp_card != node.board {
                             let sign = match () {
                                 _ if my_card / 2 == node.board / 2 => 1.0,
@@ -109,7 +109,7 @@ impl Game for LeducGame {
                                 _ => -1.0,
                             };
                             let payoff_normalized = amount_normalized * sign;
-                            result[my_card] += payoff_normalized * cfreach[opp_card];
+                            *result_item += payoff_normalized * cfreach_item;
                         }
                     }
                 }

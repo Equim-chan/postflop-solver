@@ -4,7 +4,7 @@ use std::ptr::NonNull;
 use std::slice;
 
 const ALIGNMENT: usize = 16;
-const STACK_UNIT: usize = 1024 * 1024 * 64; // 64MB
+const STACK_UNIT: usize = 1 << 20; // 1MB
 
 #[inline]
 pub(crate) fn align_up(size: usize) -> usize {
