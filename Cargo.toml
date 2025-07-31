@@ -9,8 +9,8 @@ repository = "https://github.com/b-inary/postflop-solver"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
-bincode = { version = "=2.0.0-rc.3", optional = true }
-bincode_derive = { version = "=2.0.0-rc.3", optional = true}
+bincode = { version = "2", optional = true }
+bincode_derive = { version = "2", optional = true}
 rayon = { version = "1", optional = true }
 regex = "1"
 zstd = { version = "0.12", optional = true, default-features = false }

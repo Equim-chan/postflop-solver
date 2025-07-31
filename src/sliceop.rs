@@ -149,8 +149,12 @@ pub(crate) fn max_fma_slices_uninit<'a>(
 
 #[inline]
 pub(crate) fn inner_product(src1: &[f32], src2: &[f32]) -> f32 {
+    #[cfg(target_feature = "avx512f")]
+    const CHUNK_SIZE: usize = 16;
+    #[cfg(not(target_feature = "avx512f"))]
     const CHUNK_SIZE: usize = 8;
 
+    assert_eq!(src1.len(), src2.len());
     let len = src1.len();
     let len_chunk = len / CHUNK_SIZE * CHUNK_SIZE;
     let mut acc = [0.0; CHUNK_SIZE];
@@ -160,20 +164,22 @@ pub(crate) fn inner_product(src1: &[f32], src2: &[f32]) -> f32 {
             unsafe {
                 let x = *src1.get_unchecked(i + j);
                 let y = *src2.get_unchecked(i + j);
-                *acc.get_unchecked_mut(j) += (x * y) as f64;
+                *acc.get_unchecked_mut(j) += x * y;
             }
         }
     }
+
+    let mut sum = acc.iter().sum();
 
     for i in len_chunk..len {
         unsafe {
             let x = *src1.get_unchecked(i);
             let y = *src2.get_unchecked(i);
-            *acc.get_unchecked_mut(0) += (x * y) as f64;
+            sum += x * y;
         }
     }
 
-    acc.iter().sum::<f64>() as f32
+    sum
 }
 
 #[inline]
@@ -186,8 +192,12 @@ pub(crate) fn inner_product_cond(
     greater: f32,
     equal: f32,
 ) -> f32 {
+    #[cfg(target_feature = "avx512f")]
+    const CHUNK_SIZE: usize = 16;
+    #[cfg(not(target_feature = "avx512f"))]
     const CHUNK_SIZE: usize = 8;
 
+    assert_eq!(src1.len(), src2.len());
     let len = src1.len();
     let len_chunk = len / CHUNK_SIZE * CHUNK_SIZE;
     let mut acc = [0.0; CHUNK_SIZE];
@@ -209,10 +219,12 @@ pub(crate) fn inner_product_cond(
                     equal
                 };
 
-                *acc.get_unchecked_mut(j) += (x * y * z) as f64;
+                *acc.get_unchecked_mut(j) += x * y * z;
             }
         }
     }
+
+    let mut sum = acc.iter().sum();
 
     for i in len_chunk..len {
         unsafe {
@@ -229,11 +241,11 @@ pub(crate) fn inner_product_cond(
                 equal
             };
 
-            *acc.get_unchecked_mut(0) += (x * y * z) as f64;
+            sum += x * y * z;
         }
     }
 
-    acc.iter().sum::<f64>() as f32
+    sum
 }
 
 #[inline]

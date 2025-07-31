@@ -70,7 +70,7 @@ fn main() {
     let max_num_iterations = 1000;
     let target_exploitability = game.tree_config().starting_pot as f32 * 0.005; // 0.5% of the pot
     let exploitability = solve(&mut game, max_num_iterations, target_exploitability, true);
-    println!("Exploitability: {:.2}", exploitability);
+    println!("Exploitability: {exploitability:.2}");
 
     // solve the game manually
     // for i in 0..max_num_iterations {
@@ -97,12 +97,12 @@ fn main() {
     let average_equity = compute_average(&equity, weights);
     let average_ev = compute_average(&ev, weights);
     println!("Average equity: {:.2}%", 100.0 * average_equity);
-    println!("Average EV: {:.2}", average_ev);
+    println!("Average EV: {average_ev:.2}");
 
     // get available actions (OOP)
     let actions = game.available_actions();
     assert_eq!(
-        format!("{:?}", actions),
+        format!("{actions:?}"),
         "[Check, Bet(120), Bet(216), AllIn(900)]"
     );
 
@@ -111,7 +111,7 @@ fn main() {
 
     // get available actions (IP)
     let actions = game.available_actions();
-    assert_eq!(format!("{:?}", actions), "[Fold, Call, Raise(300)]");
+    assert_eq!(format!("{actions:?}"), "[Fold, Call, Raise(300)]");
 
     // confirm that IP does not fold the nut straight
     let ip_cards = game.private_cards(1);
