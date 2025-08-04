@@ -576,6 +576,8 @@ impl PostFlopGame {
                 icm_config.other_players_stacks.clone(),
                 icm_config.payout_structure.clone(),
             ));
+            self.tree_config.effective_stack =
+                icm_config.player_stacks[0].min(icm_config.player_stacks[1]);
         } else {
             self.icm_calculator = None;
         }
