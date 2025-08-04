@@ -278,7 +278,7 @@ pub fn compute_exploitability<T: Game>(game: &T) -> f32 {
     }
 
     let mes_ev = compute_mes_ev(game);
-    if !game.is_raked() {
+    if game.is_zero_sum() && !game.is_raked() {
         (mes_ev[0] + mes_ev[1]) * 0.5
     } else {
         let current_ev = compute_current_ev(game);

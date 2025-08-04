@@ -1,5 +1,6 @@
 mod base;
 mod evaluation;
+mod icm;
 mod interpreter;
 mod node;
 
@@ -98,6 +99,9 @@ pub struct PostFlopGame {
     storage_ip: Vec<u8>,
     storage_chance: Vec<u8>,
     locking_strategy: BTreeMap<usize, Vec<f32>>,
+
+    // ICM calculator
+    icm_calculator: Option<icm::ICMCalculator>,
 
     // result interpreter
     action_history: Vec<usize>,

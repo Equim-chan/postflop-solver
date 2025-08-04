@@ -54,6 +54,20 @@ pub enum BoardState {
     River = 2,
 }
 
+/// ICM (Independent Chip Model) configuration.
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "bincode", derive(Decode, Encode))]
+pub struct ICMConfig {
+    /// Stack sizes for OOP and IP players respectively.
+    pub player_stacks: [i32; 2],
+
+    /// Other players' stack sizes (excluding the two players in the heads-up).
+    pub other_players_stacks: Vec<i32>,
+
+    /// Payout structure from 1st place to last place.
+    pub payout_structure: Vec<i32>,
+}
+
 /// A struct containing the game tree configuration.
 ///
 /// # Examples
@@ -77,6 +91,7 @@ pub enum BoardState {
 ///     add_allin_threshold: 1.5,
 ///     force_allin_threshold: 0.15,
 ///     merging_threshold: 0.1,
+///     icm_config: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Default)]
@@ -131,6 +146,10 @@ pub struct TreeConfig {
     ///
     /// Personal recommendation: around `0.1`
     pub merging_threshold: f64,
+
+    /// ICM configuration
+    /// If set, enables ICM calculation instead of ChipEV
+    pub icm_config: Option<ICMConfig>,
 }
 
 /// A struct representing an abstract game tree.

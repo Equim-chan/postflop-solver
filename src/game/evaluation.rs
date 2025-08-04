@@ -16,10 +16,10 @@ impl PostFlopGame {
         cfreach: &[f32],
     ) {
         let pot = (self.tree_config.starting_pot + 2 * node.amount) as f64;
-        let half_pot = 0.5 * pot;
         let rake = min(pot * self.tree_config.rake_rate, self.tree_config.rake_cap);
-        let amount_win = (half_pot - rake) / self.num_combinations;
-        let amount_lose = -half_pot / self.num_combinations;
+
+        let (amount_win, amount_lose, amount_tie) =
+            self.calculate_amounts(node.amount, rake, player, self.num_combinations);
 
         let player_cards = &self.private_cards[player];
         let opponent_cards = &self.private_cards[player ^ 1];
@@ -147,7 +147,6 @@ impl PostFlopGame {
         }
         // showdown (raked; 3-pass)
         else {
-            let amount_tie = -0.5 * rake / self.num_combinations;
             let same_hand_index = &self.same_hand_index[player];
 
             let pair_index = card_pair_to_index(node.turn, node.river);
@@ -256,11 +255,14 @@ impl PostFlopGame {
         cfreach: &[f32],
     ) {
         let pot = (self.tree_config.starting_pot + 2 * node.amount) as f64;
-        let half_pot = 0.5 * pot;
         let rake = min(pot * self.tree_config.rake_rate, self.tree_config.rake_cap);
-        let amount_win = ((half_pot - rake) / self.bunching_num_combinations) as f32;
-        let amount_lose = (-half_pot / self.bunching_num_combinations) as f32;
-        let amount_tie = (-0.5 * rake / self.bunching_num_combinations) as f32;
+
+        let (amount_win_f64, amount_lose_f64, amount_tie_f64) =
+            self.calculate_amounts(node.amount, rake, player, self.bunching_num_combinations);
+
+        let amount_win = amount_win_f64 as f32;
+        let amount_lose = amount_lose_f64 as f32;
+        let amount_tie = amount_tie_f64 as f32;
         let opponent_len = self.private_cards[player ^ 1].len();
 
         // someone folded
@@ -315,6 +317,70 @@ impl PostFlopGame {
                         r.write(0.0);
                     }
                 });
+        }
+    }
+
+    fn calculate_amounts(
+        &self,
+        bet_amount: i32,
+        rake: f64,
+        player: usize,
+        num_combinations: f64,
+    ) -> (f64, f64, f64) {
+        if let Some(icm_calc) = &self.icm_calculator {
+            // ICM
+            let icm_config = self.tree_config.icm_config.as_ref().unwrap();
+
+            let current_stack_0 = icm_config.player_stacks[0] - bet_amount;
+            let current_stack_1 = icm_config.player_stacks[1] - bet_amount;
+            let pot_size = self.tree_config.starting_pot + 2 * bet_amount;
+
+            // Calculate ICM equity for the three possible outcomes: p0 wins, p1 wins, or tie.
+            let (equity_current_0, equity_current_1) =
+                icm_calc.calculate(current_stack_0, current_stack_1);
+
+            let (equity_0_wins_0, equity_0_wins_1) =
+                icm_calc.calculate(current_stack_0 + pot_size, current_stack_1);
+
+            let (equity_1_wins_0, equity_1_wins_1) =
+                icm_calc.calculate(current_stack_0, current_stack_1 + pot_size);
+
+            let half_pot = pot_size / 2;
+            let (equity_tie_0, equity_tie_1) = icm_calc.calculate(
+                current_stack_0 + half_pot,
+                current_stack_1 + pot_size - half_pot,
+            );
+
+            // Determine the win, lose, and tie equities for the *current* player.
+            let (current_equity, win_equity, lose_equity, tie_equity) = if player == 0 {
+                (
+                    equity_current_0,
+                    equity_0_wins_0,
+                    equity_1_wins_0,
+                    equity_tie_0,
+                )
+            } else {
+                (
+                    equity_current_1,
+                    equity_1_wins_1,
+                    equity_0_wins_1,
+                    equity_tie_1,
+                )
+            };
+
+            let amount_win = (win_equity - current_equity) / num_combinations;
+            let amount_lose = (lose_equity - current_equity) / num_combinations;
+            let amount_tie = (tie_equity - current_equity) / num_combinations;
+
+            (amount_win, amount_lose, amount_tie)
+        } else {
+            // ChipEV
+            let pot = (self.tree_config.starting_pot + 2 * bet_amount) as f64;
+            let half_pot = 0.5 * pot;
+            let amount_win = (half_pot - rake) / num_combinations;
+            let amount_lose = -half_pot / num_combinations;
+            let amount_tie = -0.5 * rake / num_combinations;
+            (amount_win, amount_lose, amount_tie)
         }
     }
 }

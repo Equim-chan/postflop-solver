@@ -114,6 +114,11 @@ impl Game for PostFlopGame {
     fn is_compression_enabled(&self) -> bool {
         self.is_compression_enabled
     }
+
+    #[inline]
+    fn is_zero_sum(&self) -> bool {
+        self.tree_config.icm_config.is_none()
+    }
 }
 
 impl PostFlopGame {
@@ -162,6 +167,7 @@ impl PostFlopGame {
         self.check_card_config()?;
         self.init_card_fields();
         self.init_root()?;
+        self.init_icm_calculator();
 
         self.state = State::TreeBuilt;
 
@@ -560,6 +566,19 @@ impl PostFlopGame {
         self.misc_memory_usage = self.memory_usage_internal();
 
         Ok(())
+    }
+
+    /// Initializes the ICM calculator.
+    #[inline]
+    fn init_icm_calculator(&mut self) {
+        if let Some(ref icm_config) = self.tree_config.icm_config {
+            self.icm_calculator = Some(icm::ICMCalculator::new(
+                icm_config.other_players_stacks.clone(),
+                icm_config.payout_structure.clone(),
+            ));
+        } else {
+            self.icm_calculator = None;
+        }
     }
 
     /// Initializes the interpreter.

@@ -77,6 +77,11 @@ pub trait Game: Send + Sync {
     fn is_compression_enabled(&self) -> bool {
         false
     }
+
+    /// Returns whether the game is zero-sum.
+    fn is_zero_sum(&self) -> bool {
+        true
+    }
 }
 
 /// The trait representing a node in game tree.

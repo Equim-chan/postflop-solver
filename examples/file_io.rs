@@ -29,6 +29,7 @@ fn main() {
         add_allin_threshold: 1.5,
         force_allin_threshold: 0.15,
         merging_threshold: 0.1,
+        icm_config: None,
     };
 
     let action_tree = ActionTree::new(tree_config).unwrap();
