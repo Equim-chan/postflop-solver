@@ -14,9 +14,10 @@ impl PostFlopGame {
     /// Moves the current node back to the root node.
     #[inline]
     pub fn back_to_root(&mut self) {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         self.action_history.clear();
         self.node_history.clear();
@@ -41,9 +42,10 @@ impl PostFlopGame {
     /// [`play`]: #method.play
     #[inline]
     pub fn history(&self) -> &[usize] {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         &self.action_history
     }
@@ -57,9 +59,10 @@ impl PostFlopGame {
     /// [`play`]: #method.play
     #[inline]
     pub fn apply_history(&mut self, history: &[usize]) {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         self.back_to_root();
         for &action in history {
@@ -73,9 +76,10 @@ impl PostFlopGame {
     /// terminal.
     #[inline]
     pub fn is_terminal_node(&self) -> bool {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         let node = self.node();
         node.is_terminal() || node.amount == self.tree_config.effective_stack
@@ -86,9 +90,10 @@ impl PostFlopGame {
     /// Note that the terminal node is not considered a chance node.
     #[inline]
     pub fn is_chance_node(&self) -> bool {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         self.node().is_chance() && !self.is_terminal_node()
     }
@@ -102,9 +107,10 @@ impl PostFlopGame {
     /// [`possible_cards`]: #method.possible_cards
     #[inline]
     pub fn available_actions(&self) -> Vec<Action> {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         if self.is_terminal_node() {
             Vec::new()
@@ -123,9 +129,10 @@ impl PostFlopGame {
     /// The `i`-th bit is set to 1 if the card of ID `i` can be dealt (see [`Card`] for encoding).
     /// If the current node is not a chance node, `0` is returned.
     pub fn possible_cards(&self) -> u64 {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         if !self.is_chance_node() {
             return 0;
@@ -230,9 +237,10 @@ impl PostFlopGame {
     /// If the current node is a terminal node or a chance node, returns an undefined value.
     #[inline]
     pub fn current_player(&self) -> usize {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         self.node().player()
     }
@@ -243,9 +251,10 @@ impl PostFlopGame {
     /// card, if any, are stored in this order.
     #[inline]
     pub fn current_board(&self) -> Vec<u8> {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         let mut ret = self.card_config.flop.to_vec();
         if self.turn != NOT_DEALT {
@@ -272,13 +281,11 @@ impl PostFlopGame {
     ///
     /// [`available_actions`]: #method.available_actions
     pub fn play(&mut self, action: usize) {
-        if self.state < State::MemoryAllocated {
-            panic!("Memory is not allocated");
-        }
-
-        if self.is_terminal_node() {
-            panic!("Terminal node is not allowed");
-        }
+        assert!(
+            self.state >= State::MemoryAllocated,
+            "Memory is not allocated"
+        );
+        assert!(!self.is_terminal_node(), "Terminal node is not allowed");
 
         // chance node
         if self.is_chance_node() {
@@ -352,9 +359,7 @@ impl PostFlopGame {
             }
 
             // panic if the action is not found
-            if action_index == usize::MAX {
-                panic!("Invalid action");
-            }
+            assert!(action_index != usize::MAX, "Invalid action");
 
             // update the state
             let node_index = self.node_index(&self.node().play(action_index));
@@ -372,9 +377,7 @@ impl PostFlopGame {
         else {
             // panic if the action is invalid
             let node = self.node();
-            if action >= node.num_actions() {
-                panic!("Invalid action");
-            }
+            assert!(action < node.num_actions(), "Invalid action");
 
             let player = node.player();
             let num_hands = self.num_private_hands(player);
@@ -437,9 +440,10 @@ impl PostFlopGame {
     /// [`expected_values`]: #method.expected_values
     /// [`expected_values_detail`]: #method.expected_values_detail
     pub fn cache_normalized_weights(&mut self) {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         if self.is_normalized_weight_cached {
             return;
@@ -558,9 +562,10 @@ impl PostFlopGame {
     /// **Time complexity:** *O*(1).
     #[inline]
     pub fn weights(&self, player: usize) -> &[f32] {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         &self.weights[player]
     }
@@ -578,13 +583,14 @@ impl PostFlopGame {
     /// [`cache_normalized_weights`]: #method.cache_normalized_weights
     #[inline]
     pub fn normalized_weights(&self, player: usize) -> &[f32] {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
-
-        if !self.is_normalized_weight_cached {
-            panic!("Normalized weights are not cached");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
+        assert!(
+            self.is_normalized_weight_cached,
+            "Normalized weights are not cached"
+        );
 
         &self.normalized_weights[player]
     }
@@ -600,13 +606,14 @@ impl PostFlopGame {
     ///
     /// [`cache_normalized_weights`]: #method.cache_normalized_weights
     pub fn equity(&self, player: usize) -> Vec<f32> {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
-
-        if !self.is_normalized_weight_cached {
-            panic!("Normalized weights are not cached");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
+        assert!(
+            self.is_normalized_weight_cached,
+            "Normalized weights are not cached"
+        );
 
         let num_hands = self.num_private_hands(player);
 
@@ -659,13 +666,11 @@ impl PostFlopGame {
     /// [`cache_normalized_weights`]: #method.cache_normalized_weights
     /// [`expected_values_detail`]: #method.expected_values_detail
     pub fn expected_values(&self, player: usize) -> Vec<f32> {
-        if self.state != State::Solved {
-            panic!("Game is not solved");
-        }
-
-        if !self.is_normalized_weight_cached {
-            panic!("Normalized weights are not cached");
-        }
+        assert!(self.state == State::Solved, "Game is not solved");
+        assert!(
+            self.is_normalized_weight_cached,
+            "Normalized weights are not cached"
+        );
 
         let expected_value_detail = self.expected_values_detail(player);
 
@@ -711,13 +716,11 @@ impl PostFlopGame {
     /// [`expected_values`]: #method.expected_value
     /// [`cache_normalized_weights`]: #method.cache_normalized_weights
     pub fn expected_values_detail(&self, player: usize) -> Vec<f32> {
-        if self.state != State::Solved {
-            panic!("Game is not solved");
-        }
-
-        if !self.is_normalized_weight_cached {
-            panic!("Normalized weights are not cached");
-        }
+        assert!(self.state == State::Solved, "Game is not solved");
+        assert!(
+            self.is_normalized_weight_cached,
+            "Normalized weights are not cached"
+        );
 
         let node = self.node();
         let num_hands = self.num_private_hands(player);
@@ -772,7 +775,7 @@ impl PostFlopGame {
                 node.cfvalues().to_vec()
             }
         } else {
-            self.cfvalues_cache[player].to_vec()
+            self.cfvalues_cache[player].clone()
         };
 
         let starting_pot = self.tree_config.starting_pot;
@@ -813,17 +816,12 @@ impl PostFlopGame {
     ///
     /// **Time complexity:** *O*(#(actions) * #(private hands)).
     pub fn strategy(&self) -> Vec<f32> {
-        if self.state < State::MemoryAllocated {
-            panic!("Memory is not allocated");
-        }
-
-        if self.is_terminal_node() {
-            panic!("Terminal node is not allowed");
-        }
-
-        if self.is_chance_node() {
-            panic!("Chance node is not allowed");
-        }
+        assert!(
+            self.state >= State::MemoryAllocated,
+            "Memory is not allocated"
+        );
+        assert!(!self.is_terminal_node(), "Terminal node is not allowed");
+        assert!(!self.is_chance_node(), "Chance node is not allowed");
 
         let node = self.node();
         let player = self.current_player();
@@ -868,30 +866,23 @@ impl PostFlopGame {
     /// Panics if the memory is not yet allocated or the game is already solved.
     /// Also, panics if the current node is a terminal node or a chance node.
     pub fn lock_current_strategy(&mut self, strategy: &[f32]) {
-        if self.state < State::MemoryAllocated {
-            panic!("Memory is not allocated");
-        }
-
-        if self.state == State::Solved {
-            panic!("Game is already solved");
-        }
-
-        if self.is_terminal_node() {
-            panic!("Terminal node is not allowed");
-        }
-
-        if self.is_chance_node() {
-            panic!("Chance node is not allowed");
-        }
+        assert!(
+            self.state >= State::MemoryAllocated,
+            "Memory is not allocated"
+        );
+        assert!(self.state != State::Solved, "Game is already solved");
+        assert!(!self.is_terminal_node(), "Terminal node is not allowed");
+        assert!(!self.is_chance_node(), "Chance node is not allowed");
 
         let mut node = self.node();
         let player = self.current_player();
         let num_actions = node.num_actions();
         let num_hands = self.num_private_hands(player);
 
-        if strategy.len() != num_actions * num_hands {
-            panic!("Invalid strategy length");
-        }
+        assert!(
+            strategy.len() == num_actions * num_hands,
+            "Invalid strategy length"
+        );
 
         let mut locking = vec![-1.0; num_actions * num_hands];
 
@@ -931,21 +922,13 @@ impl PostFlopGame {
     /// Also, panics if the current node is a terminal node or a chance node.
     #[inline]
     pub fn unlock_current_strategy(&mut self) {
-        if self.state < State::MemoryAllocated {
-            panic!("Memory is not allocated");
-        }
-
-        if self.state == State::Solved {
-            panic!("Game is already solved");
-        }
-
-        if self.is_terminal_node() {
-            panic!("Terminal node is not allowed");
-        }
-
-        if self.is_chance_node() {
-            panic!("Chance node is not allowed");
-        }
+        assert!(
+            self.state >= State::MemoryAllocated,
+            "Memory is not allocated"
+        );
+        assert!(self.state != State::Solved, "Game is already solved");
+        assert!(!self.is_terminal_node(), "Terminal node is not allowed");
+        assert!(!self.is_chance_node(), "Chance node is not allowed");
 
         let mut node = self.node();
         if !node.is_locked {
@@ -968,17 +951,12 @@ impl PostFlopGame {
     /// If the `j`-th private hand is not locked, returns `-1.0` for all `i`.
     #[inline]
     pub fn current_locking_strategy(&self) -> Option<Vec<f32>> {
-        if self.state < State::MemoryAllocated {
-            panic!("Memory is not allocated");
-        }
-
-        if self.is_terminal_node() {
-            panic!("Terminal node is not allowed");
-        }
-
-        if self.is_chance_node() {
-            panic!("Chance node is not allowed");
-        }
+        assert!(
+            self.state >= State::MemoryAllocated,
+            "Memory is not allocated"
+        );
+        assert!(!self.is_terminal_node(), "Terminal node is not allowed");
+        assert!(!self.is_chance_node(), "Chance node is not allowed");
 
         let index = self.node_index(&self.node());
         self.locking_strategy.get(&index).map(|s| {
@@ -995,7 +973,7 @@ impl PostFlopGame {
     /// Returns the reference to the current node.
     #[inline]
     fn node(&self) -> MutexGuardLike<'_, PostFlopNode> {
-        self.node_arena[self.node_history.last().cloned().unwrap_or(0)].lock()
+        self.node_arena[self.node_history.last().copied().unwrap_or(0)].lock()
     }
 
     /// Returns the index of the given node.

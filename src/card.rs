@@ -300,7 +300,7 @@ impl CardConfig {
                 &mut isomorphism_ref_turn,
                 &mut isomorphism_card_turn,
                 flop_mask,
-                &isomorphic_suit,
+                isomorphic_suit,
             );
         }
 
@@ -345,7 +345,7 @@ impl CardConfig {
                     &mut isomorphism_ref_river[turn as usize],
                     &mut isomorphism_card_river[turn as usize & 3],
                     turn_mask,
-                    &isomorphic_suit,
+                    isomorphic_suit,
                 );
             }
         }
@@ -405,7 +405,7 @@ impl CardConfig {
         isomorphism_ref: &mut Vec<u8>,
         isomorphism_card: &mut Vec<Card>,
         mask: u64,
-        isomorphic_suit: &[Option<u8>; 4],
+        isomorphic_suit: [Option<u8>; 4],
     ) {
         let push_card = isomorphism_card.is_empty();
         let mut counter = 0;

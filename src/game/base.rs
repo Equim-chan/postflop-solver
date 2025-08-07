@@ -106,7 +106,7 @@ impl Game for PostFlopGame {
             &[]
         } else {
             let index = self.node_index(node);
-            self.locking_strategy.get(&index).unwrap()
+            &self.locking_strategy[&index]
         }
     }
 
@@ -153,7 +153,7 @@ impl PostFlopGame {
         self.state = State::ConfigError;
 
         if !action_tree.invalid_terminals().is_empty() {
-            return Err("Invalid terminal is found in action tree".to_string());
+            return Err("Invalid terminal is found in action tree".to_owned());
         }
 
         self.card_config = card_config;
@@ -186,17 +186,17 @@ impl PostFlopGame {
     #[inline]
     pub fn set_bunching_effect(&mut self, bunching_data: &BunchingData) -> Result<(), String> {
         if self.state <= State::Uninitialized {
-            return Err("Game is not successfully initialized".to_string());
+            return Err("Game is not successfully initialized".to_owned());
         }
 
         if !bunching_data.is_ready() {
-            return Err("Bunching configuration is not ready".to_string());
+            return Err("Bunching configuration is not ready".to_owned());
         }
 
         let mut flop_sorted = self.card_config.flop;
         flop_sorted.sort_unstable();
         if flop_sorted != bunching_data.flop() {
-            return Err("Flop cards do not match".to_string());
+            return Err("Flop cards do not match".to_owned());
         }
 
         self.reset_bunching_effect();
@@ -253,9 +253,10 @@ impl PostFlopGame {
     /// - Card pairs are sorted in the lexicographic order.
     #[inline]
     pub fn private_cards(&self, player: usize) -> &[(Card, Card)] {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         &self.private_cards[player]
     }
@@ -263,9 +264,10 @@ impl PostFlopGame {
     /// Returns the estimated memory usage in bytes (uncompressed, compressed).
     #[inline]
     pub fn memory_usage(&self) -> (u64, u64) {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         let num_elements = 2 * self.num_storage + self.num_storage_ip + self.num_storage_chance;
         let uncompressed = 4 * num_elements + self.misc_memory_usage;
@@ -277,9 +279,10 @@ impl PostFlopGame {
     /// Returns the estimated additional memory usage in bytes when the bunching effect is enabled.
     #[inline]
     pub fn memory_usage_bunching(&self) -> u64 {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         self.memory_usage_bunching_internal()
     }
@@ -290,9 +293,9 @@ impl PostFlopGame {
     /// turns) which we cannot do while building an action tree.
     pub fn remove_lines(&mut self, lines: &[Vec<Action>]) -> Result<(), String> {
         if self.state <= State::Uninitialized {
-            return Err("Game is not successfully initialized".to_string());
+            return Err("Game is not successfully initialized".to_owned());
         } else if self.state >= State::MemoryAllocated {
-            return Err("Game has already been allocated".to_string());
+            return Err("Game has already been allocated".to_owned());
         }
 
         for line in lines {
@@ -321,9 +324,10 @@ impl PostFlopGame {
 
     /// Allocates the memory.
     pub fn allocate_memory(&mut self, enable_compression: bool) {
-        if self.state <= State::Uninitialized {
-            panic!("Game is not successfully initialized");
-        }
+        assert!(
+            self.state > State::Uninitialized,
+            "Game is not successfully initialized"
+        );
 
         if self.state == State::MemoryAllocated
             && self.storage_mode == BoardState::River
@@ -366,7 +370,7 @@ impl PostFlopGame {
         let range = &config.range;
 
         if flop.contains(&NOT_DEALT) {
-            return Err("Flop cards not initialized".to_string());
+            return Err("Flop cards not initialized".to_owned());
         }
 
         if flop.iter().any(|&c| 52 <= c) {
@@ -427,19 +431,19 @@ impl PostFlopGame {
         }
 
         if range[0].is_empty() {
-            return Err("OOP range is empty".to_string());
+            return Err("OOP range is empty".to_owned());
         }
 
         if range[1].is_empty() {
-            return Err("IP range is empty".to_string());
+            return Err("IP range is empty".to_owned());
         }
 
         if !range[0].is_valid() {
-            return Err("OOP range is invalid (loaded broken data?)".to_string());
+            return Err("OOP range is invalid (loaded broken data?)".to_owned());
         }
 
         if !range[1].is_valid() {
-            return Err("IP range is invalid (loaded broken data?)".to_string());
+            return Err("IP range is invalid (loaded broken data?)".to_owned());
         }
 
         self.init_hands();
@@ -462,7 +466,7 @@ impl PostFlopGame {
         }
 
         if self.num_combinations == 0.0 {
-            return Err("Valid card assignment does not exist".to_string());
+            return Err("Valid card assignment does not exist".to_owned());
         }
 
         Ok(())
@@ -533,7 +537,7 @@ impl PostFlopGame {
         if total_num_nodes > u32::MAX as u64
             || mem::size_of::<PostFlopNode>() as u64 * total_num_nodes > isize::MAX as u64
         {
-            return Err("Too many nodes".to_string());
+            return Err("Too many nodes".to_owned());
         }
 
         self.num_nodes = num_nodes;
@@ -878,7 +882,7 @@ impl PostFlopGame {
                     self.bunching_num_combinations = arena.iter().fold(0.0, |a, &x| a + x as f64);
                     if self.bunching_num_combinations == 0.0 {
                         self.reset_bunching_effect();
-                        return Err("Valid combination not found".to_string());
+                        return Err("Valid combination not found".to_owned());
                     }
                 }
 
@@ -938,7 +942,7 @@ impl PostFlopGame {
                     self.bunching_num_combinations = arena.iter().fold(0.0, |a, &x| a + x as f64);
                     if self.bunching_num_combinations == 0.0 {
                         self.reset_bunching_effect();
-                        return Err("Valid combination not found".to_string());
+                        return Err("Valid combination not found".to_owned());
                     }
                 }
             }
@@ -1002,7 +1006,7 @@ impl PostFlopGame {
                 self.bunching_num_combinations = arena.iter().fold(0.0, |a, &x| a + x as f64);
                 if self.bunching_num_combinations == 0.0 {
                     self.reset_bunching_effect();
-                    return Err("Valid combination not found".to_string());
+                    return Err("Valid combination not found".to_owned());
                 }
             }
         }
@@ -1109,11 +1113,11 @@ impl PostFlopGame {
                     }
 
                     let num_possible_river = (44 - self.bunching_num_dead_cards) as f64;
-                    outer.iter_mut().for_each(|inner| {
-                        inner.iter_mut().for_each(|c| {
+                    for inner in &mut outer {
+                        for c in inner.iter_mut() {
                             *c /= num_possible_river;
-                        });
-                    });
+                        }
+                    }
 
                     outer
                 })
@@ -1188,17 +1192,15 @@ impl PostFlopGame {
             }
 
             let num_possible_turn = (45 - self.bunching_num_dead_cards) as f64;
-            outer.iter_mut().for_each(|inner| {
-                inner.iter_mut().for_each(|c| {
+            for inner in &mut outer {
+                for c in inner.iter_mut() {
                     *c /= num_possible_turn;
-                });
-            });
+                }
+            }
 
-            Self::push_vec_to_arena_f64(&mut arena, vec![outer])
-                .into_iter()
-                .for_each(|v| {
-                    self.bunching_coef_flop[player] = v;
-                });
+            for v in Self::push_vec_to_arena_f64(&mut arena, vec![outer]) {
+                self.bunching_coef_flop[player] = v;
+            }
         }
 
         self.bunching_arena = arena;
@@ -1307,10 +1309,10 @@ impl PostFlopGame {
     fn push_vec_to_arena_f32(arena: &mut Vec<f32>, vec: Vec<Vec<Vec<f32>>>) -> Vec<Vec<usize>> {
         let mut ret = Vec::with_capacity(vec.len());
 
-        for outer in vec.into_iter() {
+        for outer in vec {
             let mut indices = Vec::with_capacity(outer.len());
 
-            for inner in outer.into_iter() {
+            for inner in outer {
                 if inner.is_empty() {
                     indices.push(0);
                 } else {
@@ -1329,10 +1331,10 @@ impl PostFlopGame {
     fn push_vec_to_arena_f64(arena: &mut Vec<f32>, vec: Vec<Vec<Vec<f64>>>) -> Vec<Vec<usize>> {
         let mut ret = Vec::with_capacity(vec.len());
 
-        for outer in vec.into_iter() {
+        for outer in vec {
             let mut indices = Vec::with_capacity(outer.len());
 
-            for inner in outer.into_iter() {
+            for inner in outer {
                 if inner.is_empty() {
                     indices.push(0);
                 } else {
@@ -1375,11 +1377,11 @@ impl PostFlopGame {
         line: &[Action],
     ) -> Result<BuildTreeInfo, String> {
         if line.is_empty() {
-            return Err("Empty line".to_string());
+            return Err("Empty line".to_owned());
         }
 
         if node.is_terminal() {
-            return Err("Unexpected terminal node".to_string());
+            return Err("Unexpected terminal node".to_owned());
         }
 
         let action = line[0];
@@ -1398,11 +1400,11 @@ impl PostFlopGame {
         }
 
         if node.is_chance() {
-            return Err("Cannot remove a line ending in a chance action".to_string());
+            return Err("Cannot remove a line ending in a chance action".to_owned());
         }
 
         if node.num_actions() <= 1 {
-            return Err("Cannot remove the last action from a node".to_string());
+            return Err("Cannot remove the last action from a node".to_owned());
         }
 
         // Remove action/children at index. To do this we must

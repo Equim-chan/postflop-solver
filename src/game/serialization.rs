@@ -32,11 +32,11 @@ impl PostFlopGame {
     #[inline]
     pub fn set_target_storage_mode(&mut self, mode: BoardState) -> Result<(), String> {
         if mode > self.storage_mode {
-            return Err("Cannot set target to a higher value than the current storage".to_string());
+            return Err("Cannot set target to a higher value than the current storage".to_owned());
         }
 
         if mode < self.tree_config.initial_state {
-            return Err("Cannot set target to a lower value than the initial state".to_string());
+            return Err("Cannot set target to a lower value than the initial state".to_owned());
         }
 
         self.target_storage_mode = mode;
@@ -47,10 +47,13 @@ impl PostFlopGame {
     #[inline]
     pub fn target_memory_usage(&self) -> u64 {
         match self.target_storage_mode {
-            BoardState::River => match self.is_compression_enabled {
-                false => self.memory_usage().0,
-                true => self.memory_usage().1,
-            },
+            BoardState::River => {
+                if !self.is_compression_enabled {
+                    self.memory_usage().0
+                } else {
+                    self.memory_usage().1
+                }
+            }
             _ => {
                 let num_target_storage = self.num_target_storage();
                 num_target_storage.iter().map(|&x| x as u64).sum::<u64>() + self.misc_memory_usage
@@ -118,7 +121,7 @@ impl Encode for PostFlopGame {
         let num_storage = self.num_target_storage();
 
         // version
-        VERSION_STR.to_string().encode(encoder)?;
+        VERSION_STR.to_owned().encode(encoder)?;
 
         // contents
         self.state.encode(encoder)?;

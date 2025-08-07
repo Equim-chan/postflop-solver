@@ -1,8 +1,9 @@
 use crate::card::*;
-use regex::Regex;
 use std::fmt::{self, Write};
 use std::str::FromStr;
 use std::sync::LazyLock;
+
+use regex::Regex;
 
 #[cfg(feature = "bincode")]
 use bincode::{Decode, Encode};
@@ -270,8 +271,8 @@ pub fn holes_to_strings(holes: &[(Card, Card)]) -> Result<Vec<String>, String> {
 /// ```
 #[inline]
 pub fn card_from_chars<T: Iterator<Item = char>>(chars: &mut T) -> Result<Card, String> {
-    let rank_char = chars.next().ok_or_else(|| "Unexpected end".to_string())?;
-    let suit_char = chars.next().ok_or_else(|| "Unexpected end".to_string())?;
+    let rank_char = chars.next().ok_or_else(|| "Unexpected end".to_owned())?;
+    let suit_char = chars.next().ok_or_else(|| "Unexpected end".to_owned())?;
 
     let rank = char_to_rank(rank_char)?;
     let suit = char_to_suit(suit_char)?;
@@ -296,7 +297,7 @@ pub fn card_from_str(s: &str) -> Result<Card, String> {
     let result = card_from_chars(&mut chars)?;
 
     if chars.next().is_some() {
-        return Err("Expected exactly two characters".to_string());
+        return Err("Expected exactly two characters".to_owned());
     }
 
     Ok(result)
@@ -322,13 +323,13 @@ pub fn flop_from_str(s: &str) -> Result<[Card; 3], String> {
     result[2] = card_from_chars(&mut chars.by_ref().skip_while(|c| c.is_whitespace()))?;
 
     if chars.next().is_some() {
-        return Err("Expected exactly three cards".to_string());
+        return Err("Expected exactly three cards".to_owned());
     }
 
     result.sort_unstable();
 
     if result[0] == result[1] || result[1] == result[2] {
-        return Err("Cards must be unique".to_string());
+        return Err("Cards must be unique".to_owned());
     }
 
     Ok(result)
@@ -346,10 +347,10 @@ fn parse_singleton(combo: &str) -> Result<(u8, u8, Suitedness), String> {
 #[inline]
 fn parse_simple_singleton(combo: &str) -> Result<(u8, u8, Suitedness), String> {
     let mut chars = combo.chars();
-    let rank1 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_string())?)?;
-    let suit1 = char_to_suit(chars.next().ok_or_else(|| "Unexpected end".to_string())?)?;
-    let rank2 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_string())?)?;
-    let suit2 = char_to_suit(chars.next().ok_or_else(|| "Unexpected end".to_string())?)?;
+    let rank1 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_owned())?)?;
+    let suit1 = char_to_suit(chars.next().ok_or_else(|| "Unexpected end".to_owned())?)?;
+    let rank2 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_owned())?)?;
+    let suit2 = char_to_suit(chars.next().ok_or_else(|| "Unexpected end".to_owned())?)?;
     if rank1 < rank2 {
         return Err(format!(
             "The first rank must be equal or higher than the second rank: {combo}"
@@ -364,8 +365,8 @@ fn parse_simple_singleton(combo: &str) -> Result<(u8, u8, Suitedness), String> {
 #[inline]
 fn parse_compound_singleton(combo: &str) -> Result<(u8, u8, Suitedness), String> {
     let mut chars = combo.chars();
-    let rank1 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_string())?)?;
-    let rank2 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_string())?)?;
+    let rank1 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_owned())?)?;
+    let rank2 = char_to_rank(chars.next().ok_or_else(|| "Unexpected end".to_owned())?)?;
     let suitedness = chars.next().map_or(Ok(Suitedness::All), |c| match c {
         's' => Ok(Suitedness::Suited),
         'o' => Ok(Suitedness::Offsuit),
@@ -455,7 +456,7 @@ impl Range {
             check_card(card2)?;
             check_weight(weight)?;
             if card1 == card2 {
-                return Err("Hand must consist of two different cards".to_string());
+                return Err("Hand must consist of two different cards".to_owned());
             }
             range.set_weight_by_cards(card1, card2, weight);
         }
@@ -772,12 +773,11 @@ impl Range {
             let rank = i as u8;
             let prev_rank = (i + 1) as u8;
 
-            if start.is_some()
+            if let Some((start_rank, weight)) = start
                 && (i == -1
                     || !self.is_same_weight(&pair_indices(rank))
-                    || start.unwrap().1 != self.get_weight_pair(rank))
+                    || weight != self.get_weight_pair(rank))
             {
-                let (start_rank, weight) = start.unwrap();
                 let s = rank_to_char(start_rank).unwrap();
                 let e = rank_to_char(prev_rank).unwrap();
                 let mut tmp = if start_rank == prev_rank {
@@ -845,12 +845,11 @@ impl Range {
             let rank2 = i as u8;
             let prev_rank2 = (i + 1) as u8;
 
-            if start.is_some()
+            if let Some((start_rank2, weight)) = start
                 && (i == -1
                     || !self.is_same_weight(&getter(rank1, rank2))
-                    || start.unwrap().1 != self.get_average_weight(&getter(rank1, rank2)))
+                    || weight != self.get_average_weight(&getter(rank1, rank2)))
             {
-                let (start_rank2, weight) = start.unwrap();
                 let s = rank_to_char(start_rank2).unwrap();
                 let e = rank_to_char(prev_rank2).unwrap();
                 let mut tmp = if start_rank2 == prev_rank2 {
@@ -956,7 +955,7 @@ impl FromStr for Range {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = TRIM_REGEX.replace_all(s, "$1").trim().to_string();
+        let s = TRIM_REGEX.replace_all(s, "$1").trim().to_owned();
         let mut ranges = s.split(',').collect::<Vec<_>>();
 
         // remove last empty element if any
@@ -1100,37 +1099,37 @@ mod tests {
         assert_eq!(suit_compound, suit_compound_equiv);
 
         let allow_empty = "".parse::<Range>();
-        assert!(allow_empty.is_ok());
+        allow_empty.unwrap();
 
         let allow_trailing_comma = "AK,".parse::<Range>();
-        assert!(allow_trailing_comma.is_ok());
+        allow_trailing_comma.unwrap();
 
         let comma_error = "AK,,".parse::<Range>();
-        assert!(comma_error.is_err());
+        comma_error.unwrap_err();
 
         let rank_error = "89".parse::<Range>();
-        assert!(rank_error.is_err());
+        rank_error.unwrap_err();
 
         let pair_error = "AAo".parse::<Range>();
-        assert!(pair_error.is_err());
+        pair_error.unwrap_err();
 
         let weight_error = "AQo:1.1".parse::<Range>();
-        assert!(weight_error.is_err());
+        weight_error.unwrap_err();
 
         let dash_error_1 = "AQo-AQo".parse::<Range>();
-        assert!(dash_error_1.is_err());
+        dash_error_1.unwrap_err();
 
         let dash_error_2 = "AQo-86s".parse::<Range>();
-        assert!(dash_error_2.is_err());
+        dash_error_2.unwrap_err();
 
         let dash_error_3 = "AQo-KQo".parse::<Range>();
-        assert!(dash_error_3.is_err());
+        dash_error_3.unwrap_err();
 
         let dash_error_4 = "K2-K5".parse::<Range>();
-        assert!(dash_error_4.is_err());
+        dash_error_4.unwrap_err();
 
         let dash_error_5 = "AhAs-QsQh".parse::<Range>();
-        assert!(dash_error_5.is_err());
+        dash_error_5.unwrap_err();
 
         let data = "85s:0.5".parse::<Range>();
         assert!(data.is_ok());

@@ -232,7 +232,7 @@ impl PostFlopNode {
     #[inline]
     pub(super) fn children(&self) -> &[MutexLike<Self>] {
         // This is safe because `MutexLike<T>` is a `repr(transparent)` wrapper around `T`.
-        let self_ptr = self as *const _ as *const MutexLike<PostFlopNode>;
+        let self_ptr = self as *const _ as *const MutexLike<Self>;
         unsafe {
             slice::from_raw_parts(
                 self_ptr.add(self.children_offset as usize),

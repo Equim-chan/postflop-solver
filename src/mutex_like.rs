@@ -26,7 +26,7 @@ pub struct MutexLike<T: ?Sized> {
 
 /// Smart pointer like wrapper that is returned when [`MutexLike`] is "locked".
 #[derive(Debug)]
-pub struct MutexGuardLike<'a, T: ?Sized + 'a> {
+pub struct MutexGuardLike<'a, T: ?Sized> {
     mutex: &'a MutexLike<T>,
 }
 

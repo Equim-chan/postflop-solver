@@ -112,7 +112,7 @@ impl TryFrom<(&str, &str)> for BetSizeOptions {
         bet.sort_unstable_by(|l, r| l.partial_cmp(r).unwrap());
         raise.sort_unstable_by(|l, r| l.partial_cmp(r).unwrap());
 
-        Ok(BetSizeOptions { bet, raise })
+        Ok(Self { bet, raise })
     }
 }
 
@@ -137,7 +137,7 @@ impl TryFrom<&str> for DonkSizeOptions {
 
         donk.sort_unstable_by(|l, r| l.partial_cmp(r).unwrap());
 
-        Ok(DonkSizeOptions { donk })
+        Ok(Self { donk })
     }
 }
 
@@ -287,7 +287,7 @@ mod tests {
         ];
 
         for s in error_tests {
-            assert!(bet_size_from_str(s, true).is_err());
+            bet_size_from_str(s, true).unwrap_err();
         }
     }
 
@@ -319,7 +319,7 @@ mod tests {
         let error_tests = [("2.5x", ""), (",", "")];
 
         for (bet, raise) in error_tests {
-            assert!(BetSizeOptions::try_from((bet, raise)).is_err());
+            BetSizeOptions::try_from((bet, raise)).unwrap_err();
         }
     }
 
@@ -347,7 +347,7 @@ mod tests {
         let error_tests = ["2.5x", ","];
 
         for donk in error_tests {
-            assert!(DonkSizeOptions::try_from(donk).is_err());
+            DonkSizeOptions::try_from(donk).unwrap_err();
         }
     }
 }

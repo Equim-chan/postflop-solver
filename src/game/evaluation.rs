@@ -27,9 +27,9 @@ impl PostFlopGame {
         let mut cfreach_sum = 0.0;
         let mut cfreach_minus = [0.0; 52];
 
-        result.iter_mut().for_each(|v| {
+        for v in result.iter_mut() {
             v.write(0.0);
-        });
+        }
 
         let result = unsafe { &mut *(result as *mut _ as *mut [f32]) };
 

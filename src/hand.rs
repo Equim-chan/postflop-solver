@@ -32,12 +32,12 @@ fn find_straight(rankset: i32) -> i32 {
 
 impl Hand {
     #[inline]
-    pub fn new() -> Hand {
-        Hand::default()
+    pub fn new() -> Self {
+        Self::default()
     }
 
     #[inline]
-    pub fn add_card(&self, card: usize) -> Hand {
+    pub fn add_card(&self, card: usize) -> Self {
         let mut hand = *self;
         hand.cards[hand.num_cards] = card;
         hand.num_cards += 1;
@@ -151,7 +151,7 @@ mod tests {
                                     let hand = hand.add_card(q);
                                     let raw_value = hand.evaluate_internal();
                                     let index_result = HAND_TABLE.binary_search(&raw_value);
-                                    assert!(index_result.is_ok());
+                                    index_result.unwrap();
                                     appeared[index_result.unwrap()] = true;
                                     counter[(raw_value >> 26) as usize] += 1;
                                 }

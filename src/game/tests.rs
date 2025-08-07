@@ -748,7 +748,7 @@ fn remove_lines() {
     ];
 
     let res = game.remove_lines(&lines);
-    assert!(res.is_ok());
+    res.unwrap();
 
     game.allocate_memory(false);
 

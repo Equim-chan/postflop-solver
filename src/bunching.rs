@@ -193,24 +193,24 @@ impl BunchingData {
         for range in fold_ranges {
             if !range.is_empty() {
                 if !range.is_suit_symmetric() {
-                    return Err("Fold ranges must be suit-symmetric".to_string());
+                    return Err("Fold ranges must be suit-symmetric".to_owned());
                 }
                 fold_ranges_vec.push(*range);
             }
         }
 
         if fold_ranges_vec.is_empty() {
-            return Err("Fold ranges is empty".to_string());
+            return Err("Fold ranges is empty".to_owned());
         }
 
         if fold_ranges_vec.len() > 4 {
-            return Err("The number of folded players must be at most 4".to_string());
+            return Err("The number of folded players must be at most 4".to_owned());
         }
 
         flop.sort_unstable();
 
         if flop[0] == flop[1] || flop[1] == flop[2] || flop[2] >= 52 {
-            return Err("Invalid flop".to_string());
+            return Err("Invalid flop".to_owned());
         }
 
         Ok(Self {
@@ -364,9 +364,7 @@ impl BunchingData {
     /// Manually prepares the phase 1.
     #[inline]
     pub fn phase1_prepare(&mut self) {
-        if self.phase != 0 {
-            panic!("Invalid state");
-        }
+        assert!(self.phase == 0, "Invalid state");
 
         match self.fold_ranges.len() {
             1 => self.phase1_prepare1(),
@@ -382,9 +380,10 @@ impl BunchingData {
     /// Manually prepares the phase 2.
     #[inline]
     pub fn phase2_prepare(&mut self) {
-        if self.phase != 1 || self.progress_percent != 100 {
-            panic!("Invalid state");
-        }
+        assert!(
+            self.phase == 1 && self.progress_percent == 100,
+            "Invalid state"
+        );
 
         self.sum[0] = vec![AtomicF64::new(0.0)];
         self.sum[1] = (0..COMB_49_1).map(|_| AtomicF64::new(0.0)).collect();
@@ -410,9 +409,10 @@ impl BunchingData {
     /// Manually prepares the phase 3.
     #[inline]
     pub fn phase3_prepare(&mut self) {
-        if self.phase != 2 || self.progress_percent != 100 {
-            panic!("Invalid state");
-        }
+        assert!(
+            self.phase == 2 && self.progress_percent == 100,
+            "Invalid state"
+        );
 
         self.result4 = (0..COMB_49_4).map(|_| AtomicF32::new(0.0)).collect();
         self.result5 = (0..COMB_49_5).map(|_| AtomicF32::new(0.0)).collect();
@@ -425,9 +425,10 @@ impl BunchingData {
     /// Manually proceeds the phase 1 by one percent.
     #[inline]
     pub fn phase1_proceed_by_percent(&mut self) {
-        if self.phase != 1 || self.progress_percent == 100 {
-            panic!("Invalid state");
-        }
+        assert!(
+            self.phase == 1 && self.progress_percent != 100,
+            "Invalid state"
+        );
 
         match self.fold_ranges.len() {
             1 => self.phase1_process1(),
@@ -447,9 +448,10 @@ impl BunchingData {
     /// Manually proceeds the phase 2 by one percent.
     #[inline]
     pub fn phase2_proceed_by_percent(&mut self) {
-        if self.phase != 2 || self.progress_percent == 100 {
-            panic!("Invalid state");
-        }
+        assert!(
+            self.phase == 2 && self.progress_percent != 100,
+            "Invalid state"
+        );
 
         match self.fold_ranges.len() {
             1 => self.phase2_process::<2>(),
@@ -468,9 +470,10 @@ impl BunchingData {
     /// Manually proceeds the phase 3 by one percent.
     #[inline]
     pub fn phase3_proceed_by_percent(&mut self) {
-        if self.phase != 3 || self.progress_percent == 100 {
-            panic!("Invalid state");
-        }
+        assert!(
+            self.phase == 3 && self.progress_percent != 100,
+            "Invalid state"
+        );
 
         if self.progress_percent == 0 {
             self.phase3_process::<4>(0, COMB_49_4);

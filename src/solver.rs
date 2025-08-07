@@ -46,13 +46,8 @@ pub fn solve<T: Game>(
     target_exploitability: f32,
     print_progress: bool,
 ) -> f32 {
-    if game.is_solved() {
-        panic!("Game is already solved");
-    }
-
-    if !game.is_ready() {
-        panic!("Game is not ready");
-    }
+    assert!(!game.is_solved(), "Game is already solved");
+    assert!(game.is_ready(), "Game is not ready");
 
     let mut root = game.root();
     let mut exploitability = compute_exploitability(game);
@@ -107,13 +102,8 @@ pub fn solve<T: Game>(
 /// Proceeds Discounted CFR algorithm for one iteration.
 #[inline]
 pub fn solve_step<T: Game>(game: &T, current_iteration: u32) {
-    if game.is_solved() {
-        panic!("Game is already solved");
-    }
-
-    if !game.is_ready() {
-        panic!("Game is not ready");
-    }
+    assert!(!game.is_solved(), "Game is already solved");
+    assert!(game.is_ready(), "Game is not ready");
 
     let mut root = game.root();
     let params = DiscountParams::new(current_iteration);
@@ -267,7 +257,7 @@ fn solve_recursive<T: Game>(
                     if s.is_sign_positive() {
                         *d = 0.0;
                     }
-                })
+                });
             }
 
             let new_scale = encode_unsigned_slice(cum_strategy, &strategy);
@@ -292,7 +282,7 @@ fn solve_recursive<T: Game>(
                     if s.is_sign_positive() {
                         *d = 0.0;
                     }
-                })
+                });
             }
 
             let new_scale = encode_signed_slice(cum_regret, &cfv_actions);

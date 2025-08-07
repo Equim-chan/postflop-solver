@@ -239,13 +239,8 @@ pub(crate) fn apply_swap<T>(slice: &mut [T], swap_list: &[(u16, u16)]) {
 /// Finalizes the solving process.
 #[inline]
 pub fn finalize<T: Game>(game: &mut T) {
-    if game.is_solved() {
-        panic!("Game is already solved");
-    }
-
-    if !game.is_ready() {
-        panic!("Game is not ready");
-    }
+    assert!(!game.is_solved(), "Game is already solved");
+    assert!(game.is_ready(), "Game is not ready");
 
     // compute the expected values and save them
     for player in 0..2 {
@@ -273,9 +268,7 @@ pub fn finalize<T: Game>(game: &mut T) {
 /// Computes the exploitability of the current strategy.
 #[inline]
 pub fn compute_exploitability<T: Game>(game: &T) -> f32 {
-    if !game.is_ready() && !game.is_solved() {
-        panic!("Game is not ready");
-    }
+    assert!(game.is_ready() || game.is_solved(), "Game is not ready");
 
     let mes_ev = compute_mes_ev(game);
     if game.is_zero_sum() && !game.is_raked() {
@@ -292,9 +285,7 @@ pub fn compute_exploitability<T: Game>(game: &T) -> f32 {
 /// This treatment makes the return value zero-sum when not raked.
 #[inline]
 pub fn compute_current_ev<T: Game>(game: &T) -> [f32; 2] {
-    if !game.is_ready() && !game.is_solved() {
-        panic!("Game is not ready");
-    }
+    assert!(game.is_ready() || game.is_solved(), "Game is not ready");
 
     let mut cfvalues = [
         Vec::with_capacity(game.num_private_hands(0)),
@@ -325,9 +316,7 @@ pub fn compute_current_ev<T: Game>(game: &T) -> [f32; 2] {
 /// Therefore, the average of the return value corresponds to the exploitability value if not raked.
 #[inline]
 pub fn compute_mes_ev<T: Game>(game: &T) -> [f32; 2] {
-    if !game.is_ready() && !game.is_solved() {
-        panic!("Game is not ready");
-    }
+    assert!(game.is_ready() || game.is_solved(), "Game is not ready");
 
     let mut cfvalues = [
         Vec::with_capacity(game.num_private_hands(0)),
@@ -610,7 +599,7 @@ fn compute_best_cfv_recursive<T: Game>(
                 &node.play(action),
                 player,
                 &cfreach_updated,
-            )
+            );
         });
 
         // use 64-bit floating point values
@@ -656,7 +645,7 @@ fn compute_best_cfv_recursive<T: Game>(
                 &node.play(action),
                 player,
                 cfreach,
-            )
+            );
         });
 
         let locking = game.locking_strategy(node);

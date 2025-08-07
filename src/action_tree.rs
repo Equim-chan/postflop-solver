@@ -344,7 +344,7 @@ impl ActionTree {
     #[inline]
     pub fn undo(&mut self) -> Result<(), String> {
         if self.history.is_empty() {
-            return Err("No action to undo".to_string());
+            return Err("No action to undo".to_owned());
         }
 
         self.history.pop();
@@ -406,13 +406,13 @@ impl ActionTree {
     #[inline]
     fn current_node(&self) -> &ActionTreeNode {
         unsafe {
-            let mut node = &*self.root.lock() as *const ActionTreeNode;
+            let mut node = &raw const *self.root.lock();
             for action in &self.history {
                 while (*node).is_chance() {
-                    node = &*(&(*node).children)[0].lock();
+                    node = &raw const *(&(*node).children)[0].lock();
                 }
                 let index = (*node).actions.iter().position(|x| x == action).unwrap();
-                node = &*(&(*node).children)[index].lock();
+                node = &raw const *(&(*node).children)[index].lock();
             }
             &*node
         }
@@ -424,7 +424,7 @@ impl ActionTree {
         unsafe {
             let mut node = self.current_node() as *const ActionTreeNode;
             while (*node).is_chance() {
-                node = &*(&(*node).children)[0].lock();
+                node = &raw const *(&(*node).children)[0].lock();
             }
             &*node
         }
@@ -573,7 +573,7 @@ impl ActionTree {
 
         let mut actions = Vec::new();
 
-        if donk_options.is_some()
+        if let Some(donk_options) = &donk_options
             && matches!(info.prev_action, Action::Chance(_))
             && info.oop_call_flag
         {
@@ -581,7 +581,7 @@ impl ActionTree {
             actions.push(Action::Check);
 
             // donk bet
-            for &donk_size in &donk_options.as_ref().unwrap().donk {
+            for &donk_size in &donk_options.donk {
                 match donk_size {
                     BetSize::PotRelative(ratio) => {
                         let amount = (pot as f64 * ratio).round() as i32;
@@ -689,7 +689,7 @@ impl ActionTree {
         };
 
         // clamp bet amounts
-        for action in actions.iter_mut() {
+        for action in &mut actions {
             match *action {
                 Action::Bet(amount) => {
                     let clamped = amount.clamp(min_amount, max_amount);
@@ -769,7 +769,7 @@ impl ActionTree {
         } else if node.children.is_empty() {
             result.push(line.clone());
         } else if node.is_chance() {
-            Self::invalid_terminals_recursive(&node.children[0].lock(), result, line)
+            Self::invalid_terminals_recursive(&node.children[0].lock(), result, line);
         } else {
             for (&action, child) in node.actions.iter().zip(node.children.iter()) {
                 line.push(action);
@@ -788,11 +788,11 @@ impl ActionTree {
         info: BuildTreeInfo,
     ) -> Result<bool, String> {
         if line.is_empty() {
-            return Err("Empty line".to_string());
+            return Err("Empty line".to_owned());
         }
 
         if node.is_terminal() {
-            return Err("Unexpected terminal node".to_string());
+            return Err("Unexpected terminal node".to_owned());
         }
 
         if node.is_chance() {
@@ -932,11 +932,11 @@ impl ActionTree {
     /// Recursive function to remove a given line from the tree.
     fn remove_line_recursive(node: &mut ActionTreeNode, line: &[Action]) -> Result<(), String> {
         if line.is_empty() {
-            return Err("Empty line".to_string());
+            return Err("Empty line".to_owned());
         }
 
         if node.is_terminal() {
-            return Err("Unexpected terminal node".to_string());
+            return Err("Unexpected terminal node".to_owned());
         }
 
         if node.is_chance() {
@@ -984,11 +984,8 @@ impl ActionTree {
 
         let action = line[0];
         let search_result = node.actions.binary_search(&action);
-        if search_result.is_err() {
-            panic!("Action does not exist: {action:?}");
-        }
 
-        let index = search_result.unwrap();
+        let index = search_result.unwrap_or_else(|_| panic!("Action does not exist: {action:?}"));
         let next_info = info.create_next(node.player, action);
         self.total_bet_amount_recursive(&node.children[index].lock(), &line[1..], next_info)
     }
@@ -1047,7 +1044,7 @@ impl BuildTreeInfo {
             _ => {}
         }
 
-        BuildTreeInfo {
+        Self {
             prev_action: action,
             num_bets,
             allin_flag,

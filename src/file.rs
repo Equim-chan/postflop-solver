@@ -65,12 +65,12 @@ pub fn save_data_into_std_write<T: FileData, W: Write>(
     compression_level: Option<i32>,
 ) -> Result<(), String> {
     if !data.is_ready_to_save() {
-        return Err("Data is not ready to save".to_string());
+        return Err("Data is not ready to save".to_owned());
     }
 
     #[cfg(not(feature = "zstd"))]
     if compression_level.is_some() {
-        return Err("Compression is not supported".to_string());
+        return Err("Compression is not supported".to_owned());
     }
 
     encode_into_std_write(MAGIC, writer, "Failed to write magic number")?;
@@ -169,33 +169,33 @@ pub fn load_data_from_std_read<T: FileData, R: Read>(
 ) -> Result<(T, String), String> {
     let magic: u32 = decode_from_std_read(reader, "Failed to read magic number")?;
     if magic != MAGIC {
-        return Err("Magic number is invalid".to_string());
+        return Err("Magic number is invalid".to_owned());
     }
 
     let version: u8 = decode_from_std_read(reader, "Failed to read version number")?;
     if version != VERSION {
-        return Err("Version number is invalid".to_string());
+        return Err("Version number is invalid".to_owned());
     }
 
     let compression_type: u8 = decode_from_std_read(reader, "Failed to read compression type")?;
     if compression_type > 1 {
-        return Err("Compression type is invalid".to_string());
+        return Err("Compression type is invalid".to_owned());
     }
 
     #[cfg(not(feature = "zstd"))]
     if compression_type == 1 {
-        return Err("Compression is not supported".to_string());
+        return Err("Compression is not supported".to_owned());
     }
 
     let data_type: u8 = decode_from_std_read(reader, "Failed to read data type")?;
     if data_type != T::data_type() as u8 {
-        return Err("Data type is invalid".to_string());
+        return Err("Data type is invalid".to_owned());
     }
 
     let estimated_memory_usage: u64 = decode_from_std_read(reader, "Failed to read memory usage")?;
     if let Some(max_memory_usage) = max_memory_usage {
         if estimated_memory_usage > max_memory_usage {
-            return Err("Estimated memory usage is too large".to_string());
+            return Err("Estimated memory usage is too large".to_owned());
         }
     }
 
